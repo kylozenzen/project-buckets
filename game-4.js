@@ -1,3 +1,6 @@
+// BUCKETS — game-4.js
+// Input handling (touch + keyboard) and mobile browser lock.
+
 function lockMobileBrowser(){
   var root=document.documentElement,body=document.body,app=document.getElementById("app");
   [root,body,app,canvas].forEach(function(el){
@@ -19,7 +22,8 @@ function lockMobileBrowser(){
   if(app){app.style.touchAction="none";app.style.overflow="hidden"}
   canvas.style.touchAction="none";
 
-  document.addEventListener("touchmove",function(e){e.preventDefault()},{passive:false});
+  // Block page scroll/bounce, but let menu cards scroll on short screens.
+  document.addEventListener("touchmove",function(e){if(e.target.closest&&e.target.closest(".card"))return;e.preventDefault()},{passive:false});
   ["gesturestart","gesturechange","gestureend"].forEach(function(type){
     document.addEventListener(type,function(e){e.preventDefault()},{passive:false});
   });
@@ -32,7 +36,7 @@ function lockMobileBrowser(){
 lockMobileBrowser();
 
 function down(e){
-  if(!running||paused)return;audioInit();pointer.down=true;pointer.id=e.pointerId;pointer.sx=pointer.x=e.clientX;pointer.sy=pointer.y=e.clientY;pointer.t0=performance.now();pointer.moved=false;pointer.charge=0;
+  if(!running||paused||menuOpen)return;audioInit();placeShotMeter(e.clientX,e.clientY);pointer.down=true;pointer.id=e.pointerId;pointer.sx=pointer.x=e.clientX;pointer.sy=pointer.y=e.clientY;pointer.t0=performance.now();pointer.moved=false;pointer.charge=0;
   try{canvas.setPointerCapture(e.pointerId)}catch(err){}
 }
 function move(e){
@@ -53,7 +57,8 @@ canvas.addEventListener("pointerdown",down,{passive:true});canvas.addEventListen
 window.addEventListener("blur",clearCharge);
 
 window.addEventListener("keydown",function(e){
-  if(!running||paused)return;
+  if((e.key==="Escape"||e.key==="p"||e.key==="P")&&running){e.preventDefault();if(menuOpen)closePause();else openPause();return}
+  if(!running||paused||menuOpen)return;
   if(e.key===" ")e.preventDefault();
   if(e.repeat)return;
   audioInit();
@@ -63,17 +68,14 @@ window.addEventListener("keydown",function(e){
   else if(e.key==="ArrowDown"||e.key==="s")stepback();
   else if(e.key==="h")hesitate();
   // Space works like holding a finger down: hold to charge, release to shoot.
-  else if(e.key===" "&&!keyCharge.down&&!pointer.down){keyCharge.down=true;keyCharge.t0=performance.now();pointer.charge=0}
+  else if(e.key===" "&&!keyCharge.down&&!pointer.down){keyCharge.down=true;keyCharge.t0=performance.now();pointer.charge=0;placeShotMeter(null)}
 });
 window.addEventListener("keyup",function(e){
   if(e.key!==" "||!keyCharge.down)return;
   e.preventDefault();
   var held=(performance.now()-keyCharge.t0)/1000;
   clearCharge();
-  if(!running||paused)return;
+  if(!running||paused||menuOpen)return;
   if(held>.16)shoot(clamp((held-.12)/.9,0,1));else hesitate();
 });
-document.getElementById("startBtn").addEventListener("click",function(){audioInit();resetRun()});
-document.getElementById("restartBtn").addEventListener("click",function(){audioInit();resetRun()});
-window.startBuckets=resetRun;
 

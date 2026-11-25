@@ -4,104 +4,172 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#08090d">
+<meta name="description" content="A one-thumb street basketball game. Read the defender, create space, get buckets.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Buckets">
 <title>BUCKETS — Read the Floor</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="./icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500..900&display=swap">
 <style>
 :root{
   --bg:#08090d;--panel:#11131a;--ink:#f7f7f3;--muted:#a4a6ad;
-  --lime:#e9ff3f;--orange:#ff7a18;--red:#ff4968;--cyan:#55dcff;
+  --lime:#e9ff3f;--orange:#ff7a18;--red:#ff4d6d;--cyan:#55dcff;--amber:#ffb22f;--violet:#b98cff;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050609;color:var(--ink);
 font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none}
 body{display:flex;align-items:center;justify-content:center}
-#app{position:relative;width:100vw;height:100dvh;max-width:560px;overflow:hidden;background:#08090d;isolation:isolate}
+#app{position:relative;width:100vw;height:100dvh;max-width:560px;overflow:hidden;background:var(--bg);isolation:isolate}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
-.hud{position:absolute;inset:0 0 auto 0;z-index:8;pointer-events:none;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 0}
-.hudTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.brand{font-weight:1000;letter-spacing:.07em;font-size:18px;line-height:1}.brand i{font-style:normal;color:var(--lime)}
-.meta{margin-top:5px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.64);font-weight:850}
-.scoreWrap{text-align:right}.score{font-size:30px;font-weight:1000;line-height:.86;letter-spacing:-.04em}.label{font-size:9px;margin-top:5px;color:rgba(255,255,255,.55);letter-spacing:.13em;text-transform:uppercase;font-weight:900}
-.meters{margin-top:12px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-.heatTrack{height:10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);overflow:hidden;position:relative}
-.heatFill{height:100%;width:0;background:linear-gradient(90deg,#ff6326,#ffca34,var(--lime));transition:width .15s ease}
-.heatTrack:after{content:"";position:absolute;inset:1px;border-radius:999px;box-shadow:inset 0 0 8px rgba(255,255,255,.15)}
-.comboPill{min-width:62px;padding:5px 8px;border-radius:999px;background:rgba(8,9,13,.65);border:1px solid rgba(255,255,255,.13);font-weight:950;font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-align:center}
-.comboPill.hot{color:var(--lime);border-color:rgba(233,255,63,.4);box-shadow:0 0 24px rgba(233,255,63,.11)}
-.readHud{position:absolute;z-index:8;left:14px;right:14px;top:calc(env(safe-area-inset-top,0px) + 92px);display:grid;grid-template-columns:minmax(0,1fr) 104px 48px;gap:8px;align-items:center;padding:8px 9px;border-radius:14px;background:rgba(5,6,9,.68);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(9px);pointer-events:none;transition:.15s ease}
-.readHud.open{border-color:rgba(233,255,63,.38);box-shadow:0 0 28px rgba(233,255,63,.08)}
-.readCopy{min-width:0}.readLabel{font-size:11px;font-weight:1000;letter-spacing:.11em;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.readHint{margin-top:2px;font-size:8px;font-weight:750;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.spaceBox>span{display:block;margin-bottom:3px;font-size:7px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45)}.spaceTrack{height:7px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08)}.spaceFill{height:100%;width:18%;background:linear-gradient(90deg,#ff5a64,#ffb22f,var(--lime));transition:width .1s linear}.clock{height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:15px;font-weight:1000;font-variant-numeric:tabular-nums}.clock.danger{color:#ff657a;border-color:rgba(255,73,104,.35);animation:clockPulse .55s infinite alternate}@keyframes clockPulse{to{background:rgba(255,73,104,.12)}}
-.gestureHint{position:absolute;z-index:7;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 15px);transform:translateX(-50%);padding:7px 10px;border-radius:999px;background:rgba(4,5,8,.52);border:1px solid rgba(255,255,255,.09);font-size:10px;font-weight:800;color:rgba(255,255,255,.62);letter-spacing:.03em;white-space:nowrap;pointer-events:none;backdrop-filter:blur(9px)}
-.callout{position:absolute;z-index:9;left:50%;top:24%;transform:translate(-50%,-8px) rotate(-2deg) scale(.85);opacity:0;pointer-events:none;text-align:center;filter:drop-shadow(0 8px 18px #000)}
-.callout.show{animation:callout .75s cubic-bezier(.2,.9,.15,1)}
-.callout b{display:block;font-size:34px;line-height:.88;font-style:italic;font-weight:1000;letter-spacing:-.05em;color:#fff;text-shadow:0 2px 0 #000,0 0 30px rgba(233,255,63,.2)}
-.callout span{display:inline-block;margin-top:5px;padding:4px 8px;background:var(--lime);color:#08090d;font-size:9px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase;transform:rotate(2deg)}
+
+/* ---------- HUD (kept compact so the hoop is never covered) ---------- */
+.hud{position:absolute;inset:0 0 auto 0;z-index:8;pointer-events:none;padding:calc(var(--safe-top) + 10px) 12px 0;
+background:linear-gradient(180deg,rgba(8,9,13,.92),rgba(8,9,13,.55) 70%,rgba(8,9,13,0))}
+.hudRow{display:flex;align-items:center;gap:10px}
+.iconBtn{pointer-events:auto;flex:0 0 auto;width:38px;height:38px;padding:0;border-radius:12px;display:grid;place-items:center;
+background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);box-shadow:none;color:var(--ink)}
+.iconBtn:active{transform:scale(.94)}
+.pauseGlyph{display:flex;gap:4px}.pauseGlyph i{display:block;width:4px;height:13px;border-radius:2px;background:currentColor}
+.brandBlock{flex:1;min-width:0}
+.brand{font-weight:900;letter-spacing:.07em;font-size:16px;line-height:1}.brand i{font-style:normal;color:var(--lime)}
+.meta{margin-top:4px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.62);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scoreWrap{text-align:right}
+.score{font-size:28px;font-weight:900;line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.label{font-size:8.5px;margin-top:4px;color:rgba(255,255,255,.5);letter-spacing:.13em;text-transform:uppercase;font-weight:800}
+.hudRow2{display:flex;align-items:center;gap:10px;margin-top:9px}
+.pips{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.pip{height:6px;border-radius:3px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.08)}
+.pip.make{background:var(--lime);border-color:var(--lime)}
+.pip.miss{background:rgba(255,77,109,.35);border-color:rgba(255,77,109,.55)}
+.pip.now{background:rgba(255,255,255,.55);animation:pip 1s ease-in-out infinite alternate}
+.pip.boss{border-color:rgba(233,255,63,.55)}
+@keyframes pip{to{background:rgba(255,255,255,.18)}}
+.comboPill{flex:0 0 auto;min-width:50px;padding:4px 8px;border-radius:999px;background:rgba(8,9,13,.65);border:1px solid rgba(255,255,255,.13);font-weight:900;font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-align:center}
+.comboPill.hot{color:var(--lime);border-color:rgba(233,255,63,.45);box-shadow:0 0 18px rgba(233,255,63,.14)}
+.heatTrack{margin-top:7px;height:4px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
+.heatFill{height:100%;width:0;background:linear-gradient(90deg,#ff6326,#ffca34,var(--lime));transition:width .2s ease}
+.heatTrack.fire .heatFill{box-shadow:0 0 12px var(--lime)}
+
+/* ---------- In-play feedback ---------- */
+.callout{position:absolute;z-index:9;left:50%;top:40%;transform:translate(-50%,-8px) rotate(-2deg) scale(.85);opacity:0;pointer-events:none;text-align:center;filter:drop-shadow(0 8px 18px #000)}
+.callout.show{animation:callout .8s cubic-bezier(.2,.9,.15,1)}
+.callout b{display:block;font-size:38px;line-height:.88;font-style:italic;font-weight:900;letter-spacing:-.05em;color:#fff;text-shadow:0 2px 0 #000,0 0 30px rgba(233,255,63,.25)}
+.callout span{display:inline-block;margin-top:6px;padding:4px 8px;background:var(--lime);color:#08090d;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;transform:rotate(2deg)}
 @keyframes callout{0%{opacity:0;transform:translate(-50%,10px) rotate(-7deg) scale(.6)}18%,72%{opacity:1;transform:translate(-50%,0) rotate(-2deg) scale(1)}100%{opacity:0;transform:translate(-50%,-10px) rotate(3deg) scale(1.08)}}
-.overlay{position:absolute;z-index:30;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 18%,rgba(233,255,63,.12),transparent 34%),linear-gradient(180deg,rgba(4,5,8,.66),rgba(4,5,8,.93));backdrop-filter:blur(8px)}
-.overlay.hidden{display:none}
-.card{width:min(100%,430px);border-radius:24px;padding:23px;background:linear-gradient(180deg,rgba(20,22,29,.97),rgba(10,11,15,.98));border:1px solid rgba(255,255,255,.12);box-shadow:0 28px 80px rgba(0,0,0,.52)}
-.kicker{font-size:10px;font-weight:1000;letter-spacing:.15em;text-transform:uppercase;color:var(--lime)}
-h1{font-size:54px;line-height:.8;letter-spacing:-.065em;margin:8px 0 14px;font-weight:1000} h1 em{font-style:normal;color:var(--lime)}
-h2{font-size:29px;line-height:1;letter-spacing:-.035em;margin:7px 0 8px}
-.lede{font-size:14px;line-height:1.45;color:#d6d7dc;margin:0 0 17px}
-.how{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0 18px}
-.how div{padding:10px 11px;border-radius:13px;background:#0b0d12;border:1px solid rgba(255,255,255,.075);font-size:11px;color:#c8c9ce}
-.how b{display:block;color:white;font-size:12px;margin-bottom:2px}
-button{width:100%;appearance:none;-webkit-appearance:none;border:0;border-radius:14px;padding:15px 18px;background:var(--lime);color:#090a0d;font-weight:1000;text-transform:uppercase;letter-spacing:.06em;font-size:14px;cursor:pointer;touch-action:manipulation;box-shadow:0 9px 30px rgba(233,255,63,.2)}
-button:active{transform:translateY(1px) scale(.995)}
-.small{margin-top:10px;text-align:center;font-size:9px;color:#858791;letter-spacing:.04em}
-.upgradeGrid{display:grid;gap:9px;margin-top:15px}
-.upgrade{background:#0b0d12;border:1px solid rgba(255,255,255,.09);box-shadow:none;color:white;text-align:left;text-transform:none;letter-spacing:0;padding:13px 14px}
-.upgrade strong{display:flex;align-items:center;gap:8px;font-size:14px}.upgrade strong i{font-style:normal;color:var(--lime)}
-.upgrade small{display:block;color:#a7a9b0;margin-top:4px;font-size:11px;line-height:1.4}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:14px 0 17px}
-.stat{padding:10px 8px;border-radius:12px;background:#0b0d12;border:1px solid rgba(255,255,255,.07);text-align:center}
-.stat b{display:block;font-size:20px;letter-spacing:-.03em}.stat span{font-size:8px;text-transform:uppercase;letter-spacing:.11em;color:#858791;font-weight:900}
-.result{font-size:56px;font-weight:1000;line-height:.9;letter-spacing:-.06em;margin:7px 0}.result span{color:var(--lime)}
-#shotMeter{position:absolute;z-index:10;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 62px);transform:translateX(-50%);width:190px;height:12px;border-radius:999px;background:rgba(5,6,9,.78);border:1px solid rgba(255,255,255,.15);overflow:hidden;opacity:0;transition:opacity .1s;pointer-events:none}
+.gestureHint{position:absolute;z-index:7;left:50%;bottom:calc(var(--safe-bot) + 14px);transform:translateX(-50%);padding:7px 11px;border-radius:999px;background:rgba(4,5,8,.62);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.02em;white-space:nowrap;pointer-events:none;backdrop-filter:blur(9px);transition:opacity .5s ease}
+.gestureHint.gone{opacity:0}
+#shotMeter{position:absolute;z-index:10;left:50%;bottom:calc(var(--safe-bot) + 64px);transform:translateX(-50%);width:170px;height:12px;border-radius:999px;background:rgba(5,6,9,.82);border:1px solid rgba(255,255,255,.18);overflow:hidden;opacity:0;transition:opacity .1s;pointer-events:none}
 #shotMeter.active{opacity:1}
-#shotFill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),#ffb035,var(--lime),#ffb035,var(--red))}
-#shotSweet{position:absolute;top:0;bottom:0;left:66.5%;width:11%;border-left:1px solid white;border-right:1px solid white;background:rgba(255,255,255,.11)}
-#flash{position:absolute;z-index:15;inset:0;background:white;opacity:0;pointer-events:none;mix-blend-mode:screen}
-.version{position:absolute;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 44px);z-index:6;font-size:8px;font-weight:900;color:rgba(255,255,255,.24);letter-spacing:.13em;pointer-events:none}
+#shotMeter.atFinger{bottom:auto}
+#shotFill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),#ffb035 50%,var(--lime) 70%,#ffb035 85%,var(--red))}
+#shotSweet{position:absolute;top:0;bottom:0;left:66.5%;width:11%;border-left:2px solid #fff;border-right:2px solid #fff;background:rgba(233,255,63,.16)}
+#flash{position:absolute;z-index:15;inset:0;background:var(--lime);opacity:0;pointer-events:none;mix-blend-mode:screen;transition:opacity .18s ease}
+
+/* ---------- Overlays ---------- */
+.overlay{position:absolute;z-index:30;inset:0;display:flex;align-items:center;justify-content:center;padding:calc(var(--safe-top) + 18px) 18px calc(var(--safe-bot) + 18px);background:radial-gradient(circle at 50% 18%,rgba(233,255,63,.12),transparent 38%),linear-gradient(180deg,rgba(4,5,8,.62),rgba(4,5,8,.94));backdrop-filter:blur(8px);overflow-y:auto}
+.overlay.hidden{display:none}
+.card{width:min(100%,430px);max-height:100%;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;border-radius:24px;padding:22px;background:linear-gradient(180deg,rgba(20,22,29,.97),rgba(10,11,15,.98));border:1px solid rgba(255,255,255,.12);box-shadow:0 28px 80px rgba(0,0,0,.52);animation:cardIn .28s cubic-bezier(.2,.9,.2,1)}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.kicker{font-size:10px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:var(--lime)}
+h1{font-size:56px;line-height:.82;letter-spacing:-.065em;margin:10px 0 14px;font-weight:900} h1 em{font-style:normal;color:var(--lime)}
+h2{font-size:28px;line-height:1;letter-spacing:-.035em;margin:7px 0 8px;font-weight:900}
+.lede{font-size:14px;line-height:1.45;color:#d6d7dc;margin:0 0 14px}
+.how{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 16px}
+.how div{padding:10px 11px 10px 12px;border-radius:13px;background:#0b0d12;border:1px solid rgba(255,255,255,.075);border-left:3px solid var(--c,#fff);font-size:11px;color:#c8c9ce}
+.how b{display:flex;align-items:center;gap:6px;color:white;font-size:12px;margin-bottom:2px;letter-spacing:.04em}
+.how b small{font-size:11px;color:var(--c);font-weight:900}
+button{width:100%;appearance:none;-webkit-appearance:none;border:0;border-radius:14px;padding:15px 18px;background:var(--lime);color:#090a0d;font:inherit;font-weight:900;text-transform:uppercase;letter-spacing:.06em;font-size:14px;cursor:pointer;touch-action:manipulation;box-shadow:0 9px 30px rgba(233,255,63,.2)}
+button:active{transform:translateY(1px) scale(.995)}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+button.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);box-shadow:none}
+.btnRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.metaRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:11px;color:#9d9fa7}
+.metaRow b{color:var(--ink)}
+.chip{width:auto;padding:7px 11px;border-radius:999px;font-size:10px;letter-spacing:.08em;background:rgba(255,255,255,.06);color:var(--ink);border:1px solid rgba(255,255,255,.12);box-shadow:none}
+.chip[aria-pressed="true"]{color:#08090d;background:var(--lime);border-color:var(--lime)}
+.small{margin-top:10px;text-align:center;font-size:10px;color:#858791;letter-spacing:.03em}
+.upgradeGrid{display:grid;gap:9px;margin-top:14px}
+.upgrade{background:#0b0d12;border:1px solid rgba(255,255,255,.09);box-shadow:none;color:white;text-align:left;text-transform:none;letter-spacing:0;padding:13px 14px;transition:opacity .2s}
+.upgrade[disabled]{opacity:.45}
+.upgrade strong{display:flex;align-items:center;gap:8px;font-size:14px}.upgrade strong i{font-style:normal;color:var(--lime);width:18px;text-align:center}
+.upgrade small{display:block;color:#a7a9b0;margin-top:4px;font-size:11px;line-height:1.4}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0 14px}
+.stat{padding:10px 8px;border-radius:12px;background:#0b0d12;border:1px solid rgba(255,255,255,.07);text-align:center}
+.stat b{display:block;font-size:20px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.stat span{font-size:8px;text-transform:uppercase;letter-spacing:.11em;color:#858791;font-weight:800}
+.result{font-size:58px;font-weight:900;line-height:.9;letter-spacing:-.06em;margin:8px 0 4px;font-variant-numeric:tabular-nums}.result span{color:var(--lime)}
+.newBest{display:inline-block;padding:4px 9px;border-radius:6px;background:var(--lime);color:#08090d;font-size:10px;font-weight:900;letter-spacing:.14em;transform:rotate(-2deg);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.newBest.hidden{display:none}
+@keyframes pop{from{transform:scale(.4) rotate(-8deg);opacity:0}}
+.endPips{margin:4px 0 12px}
+.settingList{margin:14px 0 10px;border-radius:14px;background:#0b0d12;border:1px solid rgba(255,255,255,.08)}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;font-size:13px;font-weight:700}
+.setting+.setting{border-top:1px solid rgba(255,255,255,.07)}
+.setting small{display:block;font-size:10.5px;color:#8b8d95;font-weight:500;margin-top:2px}
+.toggle{width:46px;height:26px;padding:0;border-radius:999px;background:rgba(255,255,255,.12);box-shadow:none;position:relative;flex:0 0 auto}
+.toggle:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .18s ease}
+.toggle[aria-pressed="true"]{background:var(--lime)}
+.toggle[aria-pressed="true"]:after{transform:translateX(20px);background:#08090d}
+details{margin-top:12px;border-radius:14px;background:#0b0d12;border:1px solid rgba(255,255,255,.08);padding:2px 14px}
+summary{cursor:pointer;padding:11px 0;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";float:right;color:var(--lime)}
+details[open] summary:after{content:"–"}
+.controls{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}
+.controls td{padding:6px 0;border-top:1px solid rgba(255,255,255,.06);color:#c8c9ce}
+.controls td:first-child{color:#fff;font-weight:700}
+.about{margin-top:14px;font-size:11px;line-height:1.5;color:#8b8d95;text-align:center}
+.about a{color:var(--lime);text-decoration:none;font-weight:700}
 @media(min-width:700px){body{padding:18px}#app{height:min(920px,calc(100dvh - 36px));border-radius:28px;border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 90px #000}}
+@media(prefers-reduced-motion:reduce){.callout.show{animation-duration:.01s}.pip.now{animation:none}.card{animation:none}}
 </style>
 </head>
 <body>
 <div id="app">
-  <canvas id="game"></canvas>
-  <div class="hud">
-    <div class="hudTop">
-      <div><div class="brand">BUCKETS<i>.</i></div><div class="meta" id="roundLabel">Street Run · Possession 1/10</div></div>
-      <div class="scoreWrap"><div class="score" id="score">0</div><div class="label">Run score</div></div>
+  <canvas id="game" aria-label="Basketball court"></canvas>
+
+  <div class="hud" id="hud">
+    <div class="hudRow">
+      <button type="button" class="iconBtn" id="pauseBtn" aria-label="Pause"><span class="pauseGlyph"><i></i><i></i></span></button>
+      <div class="brandBlock"><div class="brand">BUCKETS<i>.</i></div><div class="meta" id="roundLabel">Possession 1/10</div></div>
+      <div class="scoreWrap"><div class="score" id="score">0</div><div class="label" id="bestLabel">Best 0</div></div>
     </div>
-    <div class="meters">
-      <div class="heatTrack"><div class="heatFill" id="heat"></div></div>
-      <div class="comboPill" id="combo">x1 combo</div>
+    <div class="hudRow2">
+      <div class="pips" id="pips"></div>
+      <div class="comboPill" id="combo">x1</div>
     </div>
+    <div class="heatTrack" id="heatTrack"><div class="heatFill" id="heat"></div></div>
   </div>
+
   <div class="callout" id="callout"><b id="calloutMain">PURE</b><span id="calloutSub">+300</span></div>
   <div id="shotMeter"><div id="shotFill"></div><div id="shotSweet"></div></div>
-  <div class="readHud" id="readHud"><div class="readCopy"><div class="readLabel" id="readLabel">PRESS</div><div class="readHint" id="readHint">Crowding your handle</div></div><div class="spaceBox"><span>Space</span><div class="spaceTrack"><div class="spaceFill" id="spaceFill"></div></div></div><div class="clock" id="clock">8.5</div></div>
   <div class="gestureHint" id="gestureHint">tap hesi · ↔ cross · ↑ drive · ↓ stepback · hold shoot</div>
-  <div class="version">READ THE FLOOR v0.3</div>
   <div id="flash"></div>
 
   <div class="overlay" id="startOverlay">
     <div class="card">
-      <div class="kicker">Nobody Creative presents · Read the Floor v0.3</div>
+      <div class="kicker">Nobody Creative · Read the Floor</div>
       <h1>GET<br><em>BUCKETS.</em></h1>
-      <p class="lede">Ten possessions. One thumb. Now the defender has a plan. Read the stance, create real space, then attack before the window closes.</p>
+      <p class="lede">Ten possessions. One thumb. Read the defender's stance, beat it with the right move, then attack before he recovers.</p>
       <div class="how">
-        <div><b>PRESS / REACH</b>Cross or tap-hesi</div>
-        <div><b>SAG</b>Take the jumper</div>
-        <div><b>CUT OFF</b>Step back for space</div>
-        <div><b>Then attack</b>Open window fades fast</div>
+        <div style="--c:var(--red)"><b>PRESS <small>→←</small></b>Cross or tap-hesi</div>
+        <div style="--c:var(--cyan)"><b>SAG <small>←→</small></b>Take the jumper</div>
+        <div style="--c:var(--amber)"><b>REACH <small>✋</small></b>Cross him up</div>
+        <div style="--c:var(--violet)"><b>CUT OFF <small>⊘</small></b>Step back for space</div>
       </div>
       <button type="button" id="startBtn">Start street run</button>
-      <div class="small">Mix up your bag — repeat the same move and defenders adapt.</div>
+      <div class="metaRow">
+        <span id="startStats">Best <b>0</b> · <b>0</b> runs</span>
+        <button type="button" class="chip" id="startSound" aria-pressed="false">Sound off</button>
+      </div>
+      <div class="small">Mix up your bag — repeat a move and defenders adapt.</div>
     </div>
   </div>
 
@@ -114,17 +182,52 @@ button:active{transform:translateY(1px) scale(.995)}
     </div>
   </div>
 
+  <div class="overlay hidden" id="pauseOverlay">
+    <div class="card">
+      <div class="kicker">Paused</div>
+      <h2>Take a breather.</h2>
+      <button type="button" id="resumeBtn">Resume</button>
+      <div class="settingList">
+        <div class="setting"><div>Sound<small>Off by default</small></div><button type="button" class="toggle" id="soundToggle" aria-pressed="false" aria-label="Sound"></button></div>
+        <div class="setting"><div>Vibration<small>Android phones</small></div><button type="button" class="toggle" id="hapticToggle" aria-pressed="true" aria-label="Vibration"></button></div>
+      </div>
+      <div class="btnRow">
+        <button type="button" class="ghost" id="restartRunBtn">Restart run</button>
+        <button type="button" class="ghost" id="quitBtn">Quit to title</button>
+      </div>
+      <details>
+        <summary>How to play</summary>
+        <table class="controls">
+          <tr><td>Tap</td><td>Hesi · keyboard H</td></tr>
+          <tr><td>Swipe ← →</td><td>Crossover · A / D or arrows</td></tr>
+          <tr><td>Swipe ↑</td><td>Drive, finish at the rim · W</td></tr>
+          <tr><td>Swipe ↓</td><td>Stepback · S</td></tr>
+          <tr><td>Hold, release</td><td>Jumper · hold Space</td></tr>
+          <tr><td>Esc / P</td><td>Pause</td></tr>
+        </table>
+      </details>
+      <details>
+        <summary>Your stats</summary>
+        <div class="stats" id="statsGrid"></div>
+      </details>
+      <div class="about">BUCKETS is a <a id="aboutLink" href="#" target="_blank" rel="noopener">Nobody Creative</a> game by Ben Campbell.<br><span id="versionLabel">v0.4</span></div>
+    </div>
+  </div>
+
   <div class="overlay hidden" id="endOverlay">
     <div class="card">
       <div class="kicker" id="endKicker">Run complete</div>
       <div class="result"><span id="finalScore">0</span> PTS</div>
+      <span class="newBest hidden" id="newBest">NEW BEST</span>
       <div class="stats">
         <div class="stat"><b id="madeStat">0</b><span>Buckets</span></div>
         <div class="stat"><b id="bestComboStat">x1</b><span>Best combo</span></div>
         <div class="stat"><b id="perfectStat">0</b><span>Reads won</span></div>
       </div>
+      <div class="pips endPips" id="endPips"></div>
       <p class="lede" id="endText">The court remembers.</p>
       <button type="button" id="restartBtn">Run it back</button>
+      <div class="metaRow"><span id="endBest">Best <b>0</b></span><button type="button" class="chip" id="endMenuBtn">Title</button></div>
     </div>
   </div>
 </div>
@@ -133,5 +236,6 @@ button:active{transform:translateY(1px) scale(.995)}
 <script src="./game-2.js"></script>
 <script src="./game-3.js"></script>
 <script src="./game-4.js"></script>
+<script src="./shell.js"></script>
 </body>
 </html>

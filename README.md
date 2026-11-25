@@ -21,14 +21,32 @@ to how it behaves in production.
 
 | File | Contains |
 | --- | --- |
-| `index.html` | Markup, CSS, HUD, overlays. Loads the four scripts in order. |
-| `game-1.js` | Globals, run/player/defender/ball state, audio, helpers, stance + read system |
+| `index.html` | Markup, CSS, HUD, overlays (title, upgrade, pause, end). Loads the scripts in order. |
+| `game-1.js` | Globals, saved settings + stats, run/player/defender/ball state, audio, HUD, stance + read system |
 | `game-2.js` | Run flow: possessions, upgrades, moves (hesi, cross, stepback, drive), shot resolution |
-| `game-3.js` | `update()`, all canvas rendering, the main `loop()` |
+| `game-3.js` | `update()`, cached court background, all canvas rendering, the main `loop()` |
 | `game-4.js` | Input handling (touch + keyboard) and mobile browser lock |
+| `shell.js` | Menus, settings, stats, auto-pause, service worker registration, Nobody Arcade events |
+| `sw.js` | Network-first service worker (offline play after first visit) |
+| `manifest.webmanifest`, `icons/` | PWA install + favicon/app icons |
 
-The scripts share plain `var` globals and **depend on load order**. Keep the four
+The scripts share plain `var` globals and **depend on load order**. Keep the five
 `<script>` tags in sequence; don't add `defer`, `async`, or `type="module"`.
+
+## Layout notes
+
+- World positions are fractions of the canvas height (`H*.82` etc.), unchanged from v0.3, so
+  tuning numbers still mean the same thing.
+- `layout()` in `game-1.js` measures the HUD and sets `L.camY`, which shifts the court down if
+  the HUD would cover the shot clock (notched phones in standalone mode). `L.topLimit` caps
+  shot arcs so the ball never flies behind the HUD.
+- The court, skyline, fence and lights are drawn once into an offscreen canvas and rebuilt on
+  resize (and once the Inter font loads).
+
+## Saved data
+
+Everything is local (`localStorage` key `buckets.v1`): sound/vibration settings and lifetime
+stats (runs, best, buckets, pure makes, reads won, best combo). Sound is **off by default**.
 
 ## Controls
 
@@ -39,6 +57,7 @@ The scripts share plain `var` globals and **depend on load order**. Keep the fou
 | Swipe ↑ | `W` or ↑ | Drive (finishes at the rim) |
 | Swipe ↓ | `S` or ↓ | Stepback |
 | Hold, release | Hold `Space`, release | Jumper |
+| Pause button | `Esc` or `P` | Pause menu |
 
 ## Deploy
 
@@ -47,17 +66,19 @@ Netlify, publish directory `.`, no build command. `netlify.toml` sets a
 
 ## Connecting to Nobody Arcade
 
-Add an entry to `data/games.js` in the arcade repo:
+Add an entry to the arcade's games list. The `id` must be `buckets` (it has to match
+`GAME_ID` in `shell.js`):
 
 ```js
+id: "buckets",
 playUrl: "https://YOUR-SITE.netlify.app",
 sourceUrl: "https://github.com/kylozenzen/project-buckets",
 embed: true
 ```
 
-The arcade listens for optional `postMessage` events from the game iframe
-(`game_started`, `game_completed`, `score_submitted`, and others) to feed the
-Arcade Passport. Buckets doesn't emit these yet.
+Buckets posts `NOBODY_ARCADE_EVENT` messages to the parent frame when embedded:
+`game_started` on every run, then `score_submitted` and `game_completed` (with score,
+makes, reads, best combo) when the run ends. Nothing is sent when played standalone.
 
 ## Notes
 
