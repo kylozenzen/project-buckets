@@ -39,16 +39,16 @@ var stanceDefs={
  cut:{id:"cut",label:"CUT OFF",hint:"Sitting on the drive",coach:"Drive cut off · step back",color:"#c783ff",counter:["step"]}
 };
 var upgrades=[
- {icon:"◎",name:"HEAT CHECK",desc:"Widen the perfect-release window.",apply:function(){state.shotWindow=Math.min(1.75,state.shotWindow+.24)}},
+ {icon:"◎",name:"HEAT CHECK",desc:"Widen the perfect-release window.",apply:function(){state.shotWindow=Math.min(1.75,state.shotWindow+.24)},maxed:function(){return state.shotWindow>=1.749}},
  {icon:"↯",name:"ANKLE INSURANCE",desc:"Crossovers stun defenders longer.",apply:function(){state.stunBonus+=.16}},
- {icon:"▰",name:"BULLY BALL",desc:"Drives knock defenders out of your lane.",apply:function(){state.bully=true}},
- {icon:"⌁",name:"MAGNET RIM",desc:"Near misses get a second chance.",apply:function(){state.magnet=Math.min(.55,state.magnet+.18)}},
- {icon:"◇",name:"GHOST STEP",desc:"Ignore the first defensive bump each possession.",apply:function(){state.ghost=true}},
- {icon:"🔥",name:"MICROWAVE",desc:"Start every new possession with extra heat.",apply:function(){state.quickFirst=true}},
- {icon:"⏱",name:"CLOCKWORK",desc:"Add 1.5 seconds to every possession.",apply:function(){state.clockMax=Math.min(12,state.clockMax+1.5)}},
+ {icon:"▰",name:"BULLY BALL",desc:"Drives knock defenders out of your lane.",apply:function(){state.bully=true},maxed:function(){return state.bully}},
+ {icon:"⌁",name:"MAGNET RIM",desc:"Near misses get a second chance.",apply:function(){state.magnet=Math.min(.55,state.magnet+.18)},maxed:function(){return state.magnet>=.549}},
+ {icon:"◇",name:"GHOST STEP",desc:"Ignore the first defensive bump each possession.",apply:function(){state.ghost=true},maxed:function(){return state.ghost}},
+ {icon:"🔥",name:"MICROWAVE",desc:"Start every new possession with extra heat.",apply:function(){state.quickFirst=true},maxed:function(){return state.quickFirst}},
+ {icon:"⏱",name:"CLOCKWORK",desc:"Add 1.5 seconds to every possession.",apply:function(){state.clockMax=Math.min(12,state.clockMax+1.5)},maxed:function(){return state.clockMax>=11.99}},
  {icon:"➜",name:"FIRST STEP",desc:"Correct reads stay open longer.",apply:function(){state.advantageBonus+=.35}},
- {icon:"◉",name:"DEAD EYE",desc:"Reduce the penalty on contested jumpers.",apply:function(){state.deadeye=Math.min(.35,state.deadeye+.12)}},
- {icon:"♜",name:"DEEP BAG",desc:"Defenders take longer to adapt to repeated moves.",apply:function(){state.antiSpam=Math.min(4,state.antiSpam+1)}}
+ {icon:"◉",name:"DEAD EYE",desc:"Reduce the penalty on contested jumpers.",apply:function(){state.deadeye=Math.min(.35,state.deadeye+.12)},maxed:function(){return state.deadeye>=.349}},
+ {icon:"♜",name:"DEEP BAG",desc:"Defenders take longer to adapt to repeated moves.",apply:function(){state.antiSpam=Math.min(4,state.antiSpam+1)},maxed:function(){return state.antiSpam>=4}}
 ];
 
 var AC=null;
@@ -92,18 +92,38 @@ function resize(){
 }
 window.addEventListener("resize",resize);resize();
 
+// ui() runs every frame; only touch the DOM when a value actually changes.
+function setTxt(el,v){if(el&&el._t!==v){el._t=v;el.textContent=v}}
+function setCls(el,v){if(el&&el._c!==v){el._c=v;el.className=v}}
+function setW(el,v){if(el&&el._w!==v){el._w=v;el.style.width=v}}
+function setCol(el,v){if(el&&el._col!==v){el._col=v;el.style.color=v}}
 function ui(){
-  scoreEl.textContent=state.score;
-  heatEl.style.width=state.heat+"%";
-  comboEl.textContent="x"+state.combo+" combo";
-  comboEl.className="comboPill"+(state.combo>=3||state.heat>=75?" hot":"");
-  roundLabel.textContent="Read the Floor · "+state.pos+"/"+state.max+" · "+defender.name+(defender.boss?" · RIVAL":"");
-  if(readLabel){readLabel.textContent=(state.advantage>0?"OPEN · ":"")+defender.stanceLabel+(defender.boss?" "+defender.readsWon+"/"+defender.readsNeeded:"");readLabel.style.color=state.advantage>0?"#e9ff3f":defender.stanceColor;}
-  if(readHint)readHint.textContent=state.advantage>0?"Attack now — recovery incoming":((state.pos<=3?defender.stanceCoach:defender.stanceHint)||"");
-  if(spaceFill)spaceFill.style.width=clamp(state.space,0,100)+"%";
-  if(readHud)readHud.className="readHud"+(state.advantage>0?" open":"");
-  if(clockEl){clockEl.textContent=Math.max(0,state.clock).toFixed(1);clockEl.className="clock"+(state.clock<=3?" danger":"");}
+  setTxt(scoreEl,String(state.score));
+  setW(heatEl,Math.round(state.heat)+"%");
+  setTxt(comboEl,"x"+state.combo+" combo");
+  setCls(comboEl,"comboPill"+(state.combo>=3||state.heat>=75?" hot":""));
+  setTxt(roundLabel,"Read the Floor · "+state.pos+"/"+state.max+" · "+defender.name+(defender.boss?" · RIVAL":""));
+  setTxt(readLabel,(state.advantage>0?"OPEN · ":"")+defender.stanceLabel+(defender.boss?" "+defender.readsWon+"/"+defender.readsNeeded:""));
+  setCol(readLabel,state.advantage>0?"#e9ff3f":defender.stanceColor);
+  setTxt(readHint,state.advantage>0?"Attack now — recovery incoming":((state.pos<=3?defender.stanceCoach:defender.stanceHint)||""));
+  setW(spaceFill,Math.round(clamp(state.space,0,100))+"%");
+  setCls(readHud,"readHud"+(state.advantage>0?" open":""));
+  setTxt(clockEl,Math.max(0,state.clock).toFixed(1));
+  setCls(clockEl,"clock"+(state.clock<=3?" danger":""));
 }
+// Perfect-release window, shared by shoot() and the on-screen meter so they always agree.
+var SHOT_SWEET=.72;
+function perfectWindow(){return .055*state.shotWindow+(state.heat>=100?.018:0)}
+var shotSweetEl=document.getElementById("shotSweet");
+function syncShotMeter(){
+  var w=perfectWindow();
+  shotSweetEl.style.left=((SHOT_SWEET-w)*100)+"%";shotSweetEl.style.width=(w*200)+"%";
+}
+function clearCharge(){
+  pointer.down=false;pointer.charge=0;keyCharge.down=false;
+  shotMeter.classList.remove("active");shotFill.style.width="0%";
+}
+var keyCharge={down:false,t0:0};
 function showCallout(main,sub){
   calloutMain.textContent=main;calloutSub.textContent=sub||"";
   callout.classList.remove("show");void callout.offsetWidth;callout.classList.add("show");

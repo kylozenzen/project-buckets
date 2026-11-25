@@ -7,11 +7,15 @@ function update(dt){
   if(shake>0)shake=Math.max(0,shake-dt*30);
   if(netT>0)netT-=dt;
   if(player.stun>0)player.stun-=dt;if(player.aT>0)player.aT-=dt;
+  // Moves end when their timer runs out (shot poses hold until the ball lands).
+  if(player.aT<=0&&player.action!=="idle"&&!ball.shot)player.action="idle";
   if(defender.stun>0)defender.stun-=dt;if(defender.commit>0)defender.commit-=dt;
+  var prevDribble=player.dribble;
   player.dribble+=dt*(player.action==="drive"?12:8);
   var ox=player.x,oy=player.y;player.x=lerp(player.x,player.tx,1-Math.pow(.0006,dt));player.y=lerp(player.y,player.ty,1-Math.pow(.0012,dt));
   player.lean=clamp((player.x-ox)*.18,-.28,.28);
-  if(Math.sin(player.dribble*2*Math.PI)>0.96&&!ball.shot)sfx.bounce();
+  // One bounce sound per dribble, timed to when the ball hits the floor (fixes doubles on 120Hz screens).
+  if(!ball.shot&&Math.floor(player.dribble-.5)!==Math.floor(prevDribble-.5))sfx.bounce();
 
   if(!ball.shot){
     var handSide=player.action==="cross"?(player.facing||1):(Math.sin(player.dribble*.8)>0?1:-1);
@@ -44,9 +48,14 @@ function update(dt){
     }
   }
 
-  if(pointer.down&&!pointer.moved){
-    var held=(performance.now()-pointer.t0)/1000;
-    if(held>.12){pointer.charge=clamp((held-.12)/.9,0,1);shotMeter.classList.add("active");shotFill.style.width=(pointer.charge*100)+"%"}
+  var chargeStart=(pointer.down&&!pointer.moved)?pointer.t0:(keyCharge.down?keyCharge.t0:0);
+  if(chargeStart){
+    var held=(performance.now()-chargeStart)/1000;
+    if(held>.12){
+      pointer.charge=clamp((held-.12)/.9,0,1);
+      if(!shotMeter.classList.contains("active")){syncShotMeter();shotMeter.classList.add("active")}
+      shotFill.style.width=(pointer.charge*100)+"%";
+    }
   }
   ui();
 

@@ -6,7 +6,7 @@ function resetRun(){
   spawnPossession();ui();sfx.ui();
 }
 function spawnPossession(){
-  paused=false;state.ghostReady=state.ghost;state.clock=state.clockMax;state.space=18;state.advantage=0;state.styleBank=0;
+  clearCharge();paused=false;state.ghostReady=state.ghost;state.clock=state.clockMax;state.space=18;state.advantage=0;state.styleBank=0;
   if(state.quickFirst)state.heat=clamp(state.heat+10,0,100);
   player.x=player.tx=W/2;player.y=player.ty=H*.82;player.action="idle";player.aT=0;player.stun=0;player.air=0;
   var d=defenderTypes[(state.pos-1)%defenderTypes.length];
@@ -17,7 +17,9 @@ function spawnPossession(){
 }
 function upgradeMoment(){
   paused=true;upgradeGrid.innerHTML="";
-  var pool=upgrades.slice().sort(function(){return Math.random()-.5}).slice(0,3);
+  var pool=upgrades.filter(function(u){return !(u.maxed&&u.maxed())});
+  for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),tmp=pool[i];pool[i]=pool[j];pool[j]=tmp}
+  pool=pool.slice(0,3);
   pool.forEach(function(u){
     var b=document.createElement("button");b.type="button";b.className="upgrade";
     b.innerHTML="<strong><i>"+u.icon+"</i>"+u.name+"</strong><small>"+u.desc+"</small>";
@@ -88,7 +90,7 @@ function shoot(charge){
   if(paused||ball.shot||player.stun>0)return;
   charge=clamp(charge,0,1);player.action="shot";player.aT=.5;
   var read=state.advantage>0?"open":tryRead("shot");
-  var sweet=.72,perfectWindow=.055*state.shotWindow+(state.heat>=100?.018:0),perfect=Math.abs(charge-sweet)<=perfectWindow;
+  var sweet=SHOT_SWEET,perfect=Math.abs(charge-sweet)<=perfectWindow();
   var hoop={x:W/2,y:H*.205};var contest=clamp(1-d2(player,defender)/150,0,.86);contest*=Math.max(.28,1-state.deadeye);if(state.advantage>0)contest*=.18;if(defender.stun>0)contest*=.2;if(defender.type==="wall")contest*=1.08;
   var timing=Math.max(0,1-Math.abs(charge-sweet)/.42);var spaceBonus=state.space*.0022;
   var chance=.12+timing*.55+spaceBonus-contest*.34+state.heat*.0012;
@@ -96,17 +98,18 @@ function shoot(charge){
   var made=Math.random()<clamp(chance,.04,.97);
   if(!made&&Math.abs(charge-sweet)<.18&&Math.random()<state.magnet){made=true;floater("MAGNET",hoop.x,hoop.y+40,"#55dcff")}
   ball.shot=true;ball.kind="jumper";ball.t=0;ball.dur=.74;ball.sx=ball.x;ball.sy=ball.y;ball.tx=hoop.x;ball.ty=hoop.y;ball.arc=H*(.17+.06*charge);ball.perfect=perfect;ball.made=made;
-  if(perfect){sfx.pure();showCallout("PURE",state.advantage>0?"open + perfect":"perfect release")}else tone(330,.05,"triangle",.02,420);
+  // Confirm the release instantly, but save the big PURE callout for when it actually drops.
+  if(perfect){sfx.pure();floater("PERFECT RELEASE",player.x,player.y-52,"#e9ff3f")}else tone(330,.05,"triangle",.02,420);
 }
 function resolveShot(){
   if(ball.made){
     var base=ball.perfect?300:200,bonus=Math.max(0,state.combo-1)*50+state.styleBank;
     if(ball.kind==="dunk"){base=400;bonus=Math.max(0,state.combo-1)*70+state.styleBank;state.heat=clamp(state.heat+18,0,100);sfx.dunk();shake=13;freeze=.07;flash(.22);showCallout("POSTER","+"+(base+bonus))}
     else if(ball.kind==="layup"){base=250;sfx.swish();state.heat=clamp(state.heat+8,0,100);showCallout("TOUGH FINISH","+"+(base+bonus))}
-    else{sfx.swish();state.heat=clamp(state.heat+(ball.perfect?17:10),0,100);if(ball.perfect)state.perfects++;else showCallout(state.styleBank?"CASH THE READ":"BUCKET","+"+(base+bonus))}
+    else{sfx.swish();state.heat=clamp(state.heat+(ball.perfect?17:10),0,100);if(ball.perfect){state.perfects++;showCallout("PURE","+"+(base+bonus))}else showCallout(state.styleBank?"CASH THE READ":"BUCKET","+"+(base+bonus))}
     state.score+=base+bonus;state.makes++;state.combo++;state.bestCombo=Math.max(state.bestCombo,state.combo);netT=.32;burst(W/2,H*.225,ball.perfect?22:14,ball.perfect?"#e9ff3f":"#ffffff");floater("+"+(base+bonus),W/2,H*.28,"#e9ff3f");state.styleBank=0;if(state.heat>=100)floater("ON FIRE",player.x,player.y-58,"#ffb22f");ui();nextPossession(true);
   }else{
-    sfx.rim();shake=5;state.misses++;state.combo=1;state.readStreak=0;state.styleBank=0;state.heat=clamp(state.heat-12,0,100);showCallout("BRICK",state.space<45?"create more space":"keep shooting");burst(W/2,H*.21,9,"#ff7a18");ui();nextPossession(false);
+    sfx.rim();shake=5;state.misses++;state.combo=1;state.readStreak=0;state.styleBank=0;state.heat=clamp(state.heat-12,0,100);if(ball.perfect)showCallout("IN AND OUT","perfect release · unlucky");else showCallout("BRICK",state.space<45?"create more space":"keep shooting");burst(W/2,H*.21,9,"#ff7a18");ui();nextPossession(false);
   }
 }
 function flash(a){flashEl.style.opacity=String(a);setTimeout(function(){flashEl.style.opacity="0"},70)}

@@ -25,10 +25,20 @@ to how it behaves in production.
 | `game-1.js` | Globals, run/player/defender/ball state, audio, helpers, stance + read system |
 | `game-2.js` | Run flow: possessions, upgrades, moves (hesi, cross, stepback, drive), shot resolution |
 | `game-3.js` | `update()`, all canvas rendering, the main `loop()` |
-| `game-4.js` | Input handling and mobile browser lock |
+| `game-4.js` | Input handling (touch + keyboard) and mobile browser lock |
 
 The scripts share plain `var` globals and **depend on load order**. Keep the four
 `<script>` tags in sequence; don't add `defer`, `async`, or `type="module"`.
+
+## Controls
+
+| Touch | Keyboard | Move |
+| --- | --- | --- |
+| Tap | `H` or tap `Space` | Hesi |
+| Swipe ← / → | `A` / `D` or ← / → | Crossover |
+| Swipe ↑ | `W` or ↑ | Drive (finishes at the rim) |
+| Swipe ↓ | `S` or ↓ | Stepback |
+| Hold, release | Hold `Space`, release | Jumper |
 
 ## Deploy
 
@@ -41,7 +51,7 @@ Add an entry to `data/games.js` in the arcade repo:
 
 ```js
 playUrl: "https://YOUR-SITE.netlify.app",
-sourceUrl: "https://github.com/kylozenzen/buckets",
+sourceUrl: "https://github.com/kylozenzen/project-buckets",
 embed: true
 ```
 
