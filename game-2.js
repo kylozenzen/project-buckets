@@ -49,7 +49,7 @@ function nextPossession(made){
     if(state.pos>state.max){endRun();return}
     if(made && (state.makes===2||state.makes===5||state.makes===8)){upgradeMoment()}
     else spawnPossession();
-  },920);
+  },760);
 }
 function endRun(){
   running=false;paused=true;state.pos=state.max;
@@ -73,6 +73,8 @@ function endRun(){
 function canAct(){return running&&!paused&&!menuOpen&&!ball.shot&&player.stun<=0}
 function hesitate(){
   if(!canAct())return;
+  // Once you've won a read a hesi does nothing, so a tap fires a quick release instead.
+  if(state.advantage>0){shoot(0,true);return}
   player.action="hesi";player.aT=.22;sfx.squeak();floater("HESI",player.x,player.y-52,"#55dcff");
   var read=tryRead("hesi");if(read==="win")defender.tx+=rand(-20,20);else if(read==="lose")state.heat=clamp(state.heat-1,0,100);ui();
 }
@@ -117,27 +119,31 @@ function launch(kind,dur,arc,made,perfect){
 function layup(){
   if(!canAct())return;
   registerMove("drive");player.action="layup";player.aT=.5;var contest=clamp(1-d2(player,defender)/115,0,1);var chance=.48+state.space*.002-contest*.28+state.heat*.0012;
-  launch("layup",.5,H*.15,Math.random()<clamp(chance,.12,.88),false);player.tx=W/2;player.ty=H*.29;
+  launch("layup",.42,H*.15,Math.random()<clamp(chance,.12,.88),false);player.tx=W/2;player.ty=H*.29;
 }
 function dunk(){
   if(!canAct())return;
-  registerMove("drive");player.action="dunk";player.aT=.58;launch("dunk",.5,H*.17,true,false);
+  registerMove("drive");player.action="dunk";player.aT=.58;launch("dunk",.45,H*.17,true,false);
   player.tx=W/2;player.ty=H*.255;state.combo++;state.bestCombo=Math.max(state.bestCombo,state.combo);
 }
-function shoot(charge){
+function shoot(charge,quick){
   if(!canAct())return;
   charge=clamp(charge,0,1);player.action="shot";player.aT=.5;
   var read=state.advantage>0?"open":tryRead("shot");
-  var sweet=SHOT_SWEET,perfect=Math.abs(charge-sweet)<=perfectWindow();
+  // Quick release: no meter, solid timing, never PURE. Hold the full meter if you want PURE.
+  if(quick)charge=SHOT_SWEET-perfectWindow()-.04;
+  var sweet=SHOT_SWEET,perfect=!quick&&Math.abs(charge-sweet)<=perfectWindow();
   var hoop={x:W/2,y:H*.205};var contest=clamp(1-d2(player,defender)/150,0,.86);contest*=Math.max(.28,1-state.deadeye);if(state.advantage>0)contest*=.18;if(defender.stun>0)contest*=.2;if(defender.type==="wall")contest*=1.08;
-  var timing=Math.max(0,1-Math.abs(charge-sweet)/.42);var spaceBonus=state.space*.0022;
+  var timing=quick?.8:Math.max(0,1-Math.abs(charge-sweet)/(.42*TIME_K));var spaceBonus=state.space*.0022;
   var chance=.12+timing*.55+spaceBonus-contest*.34+state.heat*.0012;
   if(read==="lose")chance-=.08;if(perfect)chance=Math.max(chance,state.advantage>0?.95:.74);
   var made=Math.random()<clamp(chance,.04,.97);
-  if(!made&&Math.abs(charge-sweet)<.18&&Math.random()<state.magnet){made=true;floater("MAGNET",hoop.x,hoop.y+40,"#55dcff")}
-  launch("jumper",.78,H*(.34+.08*charge),made,perfect);
+  if(!made&&Math.abs(charge-sweet)<.18*TIME_K&&Math.random()<state.magnet){made=true;floater("MAGNET",hoop.x,hoop.y+40,"#55dcff")}
+  launch("jumper",.58,H*(.34+.08*charge),made,perfect);
   // Confirm the release instantly, but save the big PURE callout for when it actually drops.
-  if(perfect){sfx.pure();haptic(10);floater("PERFECT RELEASE",player.x,player.y-62,"#e9ff3f")}else tone(330,.05,"triangle",.02,420);
+  if(perfect){sfx.pure();haptic(10);floater("PERFECT RELEASE",player.x,player.y-62,"#e9ff3f")}
+  else if(quick){tone(520,.05,"triangle",.025,700);haptic(8);floater("QUICK RELEASE",player.x,player.y-62,"#55dcff")}
+  else tone(330,.05,"triangle",.02,420);
 }
 // Called when the ball reaches the rim. Scores immediately; the drop/bounce plays out during the
 // gap before the next possession.

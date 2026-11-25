@@ -3,7 +3,7 @@
 // and Nobody Arcade events. Loads last; depends on globals from game-1…4.
 
 var GAME_ID="buckets";            // must match the id in the arcade's games list
-var VERSION="v0.4";
+var VERSION="v0.4.1";
 var ABOUT_URL="https://bencampbell.netlify.app"; // swap for the Nobody Creative site when ready
 
 // ---------- Nobody Arcade bridge ----------
