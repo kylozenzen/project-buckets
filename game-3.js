@@ -69,8 +69,8 @@ function update(rawDt){
   var chargeStart=(pointer.down&&!pointer.moved)?pointer.t0:(keyCharge.down?keyCharge.t0:0);
   if(chargeStart){
     var held=(performance.now()-chargeStart)/1000;
-    if(held>.12){
-      pointer.charge=clamp((held-.12)/.9,0,1);
+    if(held>HOLD_DELAY){
+      pointer.charge=chargeFromHeld(held);
       if(!shotMeter.classList.contains("active")){syncShotMeter();shotMeter.classList.add("active")}
       shotFill.style.width=(pointer.charge*100)+"%";
     }
@@ -417,7 +417,7 @@ function drawStanceBadge(){
   ctx.fillText(defender.name,defender.x,y-18);
 }
 function coachText(){
-  if(state.advantage>0)return "ATTACK · HOLD or SWIPE ↑";
+  if(state.advantage>0)return "OPEN · TAP TO SHOOT or SWIPE ↑";
   return {press:"TAP or SWIPE ↔",sag:"HOLD, THEN RELEASE",reach:"SWIPE ↔ TO CROSS",cut:"SWIPE ↓ TO STEP BACK"}[defender.stance];
 }
 function coachActive(){return running&&store.stats.runs<2&&state.pos<=3}

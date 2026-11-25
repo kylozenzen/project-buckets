@@ -50,7 +50,7 @@ function up(e){
   if(mag>30){
     if(Math.abs(dx)>Math.abs(dy))crossover(dx>0?1:-1);
     else if(dy<0)drive();else stepback();
-  }else if(held>.16){shoot(clamp((held-.12)/.9,0,1))}
+  }else if(held>.16){shoot(chargeFromHeld(held))}
   else hesitate();
 }
 canvas.addEventListener("pointerdown",down,{passive:true});canvas.addEventListener("pointermove",move,{passive:true});canvas.addEventListener("pointerup",up,{passive:true});canvas.addEventListener("pointercancel",clearCharge,{passive:true});
@@ -76,6 +76,6 @@ window.addEventListener("keyup",function(e){
   var held=(performance.now()-keyCharge.t0)/1000;
   clearCharge();
   if(!running||paused||menuOpen)return;
-  if(held>.16)shoot(clamp((held-.12)/.9,0,1));else hesitate();
+  if(held>.16)shoot(chargeFromHeld(held));else hesitate();
 });
 

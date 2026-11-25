@@ -52,11 +52,11 @@ stats (runs, best, buckets, pure makes, reads won, best combo). Sound is **off b
 
 | Touch | Keyboard | Move |
 | --- | --- | --- |
-| Tap | `H` or tap `Space` | Hesi |
+| Tap | `H` or tap `Space` | Hesi — or a quick release when you're open |
 | Swipe ← / → | `A` / `D` or ← / → | Crossover |
 | Swipe ↑ | `W` or ↑ | Drive (finishes at the rim) |
 | Swipe ↓ | `S` or ↓ | Stepback |
-| Hold, release | Hold `Space`, release | Jumper |
+| Hold, release | Hold `Space`, release | Jumper (meter fills in ~0.4s; land the sweet spot for PURE) |
 | Pause button | `Esc` or `P` | Pause menu |
 
 ## Deploy

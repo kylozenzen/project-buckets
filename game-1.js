@@ -158,8 +158,11 @@ function ui(){
   for(var i=0;i<10;i++)setCls(pipEls[i],pipClass(i));
 }
 // Perfect-release window, shared by shoot() and the on-screen meter so they always agree.
-var SHOT_SWEET=.72;
-function perfectWindow(){return .055*state.shotWindow+(state.heat>=100?.018:0)}
+// The meter fills in CHARGE_TIME seconds (was 0.9s). Windows below are fractions of the meter,
+// scaled by TIME_K so the sweet spot lasts as many milliseconds as before (just reached sooner).
+var SHOT_SWEET=.72,HOLD_DELAY=.12,CHARGE_TIME=.42,TIME_K=.9/CHARGE_TIME;
+function chargeFromHeld(held){return clamp((held-HOLD_DELAY)/CHARGE_TIME,0,1)}
+function perfectWindow(){return (.055*state.shotWindow+(state.heat>=100?.018:0))*TIME_K}
 var shotSweetEl=$("shotSweet");
 function syncShotMeter(){
   var w=perfectWindow();
