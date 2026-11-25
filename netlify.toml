@@ -1,0 +1,23 @@
+[build]
+  publish = "."
+
+# No build step. This is a static site.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Allow the arcade to embed this game in an iframe.
+    Content-Security-Policy = "frame-ancestors 'self' https://*.netlify.app https://nobodycreative.co https://*.nobodycreative.co"
+
+# Game scripts change often during tuning; keep them fresh.
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
